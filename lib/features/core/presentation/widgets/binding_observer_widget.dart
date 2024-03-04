@@ -6,7 +6,7 @@ import 'package:task_manage_management/features/passcode/presentation/screens/pa
 class BindingObserverWidget extends StatefulWidget {
   const BindingObserverWidget({
     required this.child,
-    this.inactiveTimeOutInSeconds = 100000,
+    this.inactiveTimeOutInSeconds = 10,
     super.key,
   });
 
