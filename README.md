@@ -1,16 +1,26 @@
-# myapp
 
-A new Flutter project.
+# Project
 
-## Getting Started
+It a task management app consist with 2 core feature:
+- passcode lock
+- task management
+    - read 
+    - create (note implement)
+    - edit (not implement)
+    - delete (on going)
 
-This project is a starting point for a Flutter application.
+## Installation
 
-A few resources to get you started if this is your first Flutter project:
+please using flutter version 3.19.1
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Getting Started
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+If want to run the project
+$ flutter run
+
+if want to run golden test (not finish yet)
+$ flutter test --update-goldens
+
+if want to run integration test (not finished yet)
+$ flutter test integration_test/app_test.dart
+
