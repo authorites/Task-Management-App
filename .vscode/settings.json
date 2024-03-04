@@ -5,5 +5,10 @@
     "pubspec.yaml": "analysis_options.yaml,pubspec.lock,pubspec_overrides.yaml,.packages,.flutter-plugins,.flutter-plugins-dependencies,.metadata",
     "*.dart": "${capture}.g.dart"
   },
-  "dart.flutterSdkPath": ".fvm\\versions\\3.19.1"
+  "dart.flutterSdkPath": ".fvm\\versions\\3.19.1",
+  "cSpell.words": [
+    "amnard",
+    "Passcode",
+    "videocam"
+  ]
 }

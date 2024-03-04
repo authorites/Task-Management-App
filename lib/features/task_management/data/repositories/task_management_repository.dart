@@ -6,22 +6,23 @@ class TaskManagementRepository {
 
   final TaskManagementRemoteDataSource remoteDataSource;
 
-  Future<(List<Task>, int)> getTasks(TaskStatus status, int pageSize) async {
-    final tasks = await remoteDataSource.getTasks(status, pageSize);
-    return tasks;
+  Future<List<Task>> getTasks(
+    TaskStatus status,
+    int pageSize,
+    int pageNumber,
+  ) async {
+    return remoteDataSource.getTasks(
+      status,
+      pageSize,
+      pageNumber,
+    );
   }
 
-  // Future<Task> createTask(Task task) async {
-  //   final createdTask = await remoteDataSource.createTask(task);
-  //   return createdTask;
-  // }
+  Future<Task> createTask(Task task) async {
+    return remoteDataSource.createTask(task);
+  }
 
-  // Future<Task> updateTask(Task task) async {
-  //   final updatedTask = await remoteDataSource.updateTask(task);
-  //   return updatedTask;
-  // }
-
-  // Future<void> deleteTask(String id) async {
-  //   await remoteDataSource.deleteTask(id);
-  // }
+  Future<Task> deleteTask(String id) async {
+    return remoteDataSource.deleteTask(id);
+  }
 }

@@ -1,13 +1,14 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_manage_management/core/error/exceptions.dart';
 import 'package:task_manage_management/core/network/api_status_type.dart';
+import 'package:task_manage_management/features/core/presentation/widgets/binding_observer_widget.dart';
+import 'package:task_manage_management/features/core/presentation/widgets/error_dialog_widget.dart';
 import 'package:task_manage_management/features/task_management/domain/cubit/task_management_cubit.dart';
-import 'package:task_manage_management/features/task_management/domain/entities/task.dart';
-import 'package:task_manage_management/features/task_management/presentation/widgets/task_item_widget.dart';
+import 'package:task_manage_management/features/task_management/presentation/widgets/task_list_empty_widget.dart';
+import 'package:task_manage_management/features/task_management/presentation/widgets/task_list_skeleton_widget.dart';
 import 'package:task_manage_management/features/task_management/presentation/widgets/task_list_widget.dart';
+import 'package:task_manage_management/features/task_management/presentation/widgets/task_management_header_widget.dart';
 
 class TaskManagementScreen extends StatelessWidget {
   const TaskManagementScreen({super.key});
@@ -17,153 +18,193 @@ class TaskManagementScreen extends StatelessWidget {
     context.read<TodoTaskCubit>().getTasks();
     context.read<DoingTaskCubit>().getTasks();
     context.read<DoneTaskCubit>().getTasks();
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Placeholder(
-          child: DefaultTabController(
-            length: 3,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  alignment: Alignment.bottomCenter,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade100,
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(36),
-                          bottomRight: Radius.circular(36),
-                        ),
-                      ),
-                      width: double.infinity,
-                      height: 200,
-                      child: const Align(
-                        alignment: Alignment.topRight,
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: Colors.white,
-                            child: Icon(
-                              Icons.person,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: -22,
-                      child: Placeholder(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              child: TabBar(
-                                padding: EdgeInsets.all(8),
-                                indicatorPadding: EdgeInsets.zero,
-                                isScrollable: true,
-                                indicatorSize: TabBarIndicatorSize.tab,
-                                indicator: BoxDecoration(
-                                  color: Colors.blueAccent,
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                tabAlignment: TabAlignment.start,
-                                tabs: TaskStatus.values
-                                    .map(
-                                      (type) => Placeholder(
-                                        child: Container(
-                                          width: 64,
-                                          height: 28,
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            type.name,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<TodoTaskCubit, TaskManagementState>(
+          listener: (context, state) {
+            if (state.getTaskStatus == ApiStatusType.error) {
+              showDialog<void>(
+                context: context,
+                builder: (_) => ErrorDialogWidget(
+                  error: state.error ?? UnknownException(),
                 ),
-                SizedBox(height: 32),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      BlocBuilder<TodoTaskCubit, TaskManagementState>(
-                        buildWhen: (previous, current) =>
-                            previous.getTaskStatus != current.getTaskStatus,
-                        builder: (context, state) {
-                          switch (state.getTaskStatus) {
-                            case ApiStatusType.loading || ApiStatusType.initial:
-                              return const CircularProgressIndicator();
-                            case ApiStatusType.error:
-                              return const Text('Error');
-                            case ApiStatusType.success:
-                              return TaskListWidget(tasks: state.tasks);
-                          }
-                        },
+              );
+            }
+          },
+        ),
+        BlocListener<DoingTaskCubit, TaskManagementState>(
+          listener: (context, state) {
+            if (state.getTaskStatus == ApiStatusType.error) {
+              showDialog<void>(
+                context: context,
+                builder: (_) => ErrorDialogWidget(
+                  error: state.error ?? UnknownException(),
+                ),
+              );
+            }
+          },
+        ),
+        BlocListener<DoneTaskCubit, TaskManagementState>(
+          listener: (context, state) {
+            if (state.getTaskStatus == ApiStatusType.error) {
+              showDialog<void>(
+                context: context,
+                builder: (_) => ErrorDialogWidget(
+                  error: state.error ?? UnknownException(),
+                ),
+              );
+            }
+          },
+        ),
+      ],
+      child: BindingObserverWidget(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: DefaultTabController(
+              length: 3,
+              child: Stack(
+                children: [
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        BlocBuilder<TodoTaskCubit, TaskManagementState>(
+                          builder: (context, state) {
+                            if (state.tasks.isEmpty &&
+                                state.getTaskStatus == ApiStatusType.initial) {
+                              return const TaskListSkeletonWidget();
+                            }
+                            if (state.tasks.isEmpty &&
+                                state.getTaskStatus == ApiStatusType.loading) {
+                              return const TaskListSkeletonWidget();
+                            } else if (state.getTaskStatus ==
+                                ApiStatusType.error) {
+                              return const TaskListEmptyWidget();
+                            } else {
+                              final tasksGroupByDate = context
+                                  .read<TodoTaskCubit>()
+                                  .groupTaskByDate(state.tasks);
+                              return TaskListWidget(
+                                tasksGroupByDateList: tasksGroupByDate,
+                                onPaginate: () => context
+                                    .read<TodoTaskCubit>()
+                                    .getMoreTasks(),
+                                onRefresh: () =>
+                                    context.read<TodoTaskCubit>().getTasks(),
+                              );
+                            }
+                          },
+                        ),
+                        BlocBuilder<DoingTaskCubit, TaskManagementState>(
+                          builder: (context, state) {
+                            if (state.tasks.isEmpty &&
+                                state.getTaskStatus == ApiStatusType.initial) {
+                              return const TaskListSkeletonWidget();
+                            }
+                            if (state.tasks.isEmpty &&
+                                state.getTaskStatus == ApiStatusType.loading) {
+                              return const TaskListSkeletonWidget();
+                            } else if (state.getTaskStatus ==
+                                ApiStatusType.error) {
+                              return const TaskListEmptyWidget();
+                            } else {
+                              final tasksGroupByDate = context
+                                  .read<DoingTaskCubit>()
+                                  .groupTaskByDate(state.tasks);
+                              return TaskListWidget(
+                                tasksGroupByDateList: tasksGroupByDate,
+                                onPaginate: () => context
+                                    .read<DoingTaskCubit>()
+                                    .getMoreTasks(),
+                                onRefresh: () =>
+                                    context.read<DoingTaskCubit>().getTasks(),
+                              );
+                            }
+                          },
+                        ),
+                        BlocBuilder<DoneTaskCubit, TaskManagementState>(
+                          builder: (context, state) {
+                            if (state.tasks.isEmpty &&
+                                state.getTaskStatus == ApiStatusType.initial) {
+                              return const TaskListSkeletonWidget();
+                            }
+                            if (state.tasks.isEmpty &&
+                                state.getTaskStatus == ApiStatusType.loading) {
+                              return const TaskListSkeletonWidget();
+                            } else if (state.getTaskStatus ==
+                                ApiStatusType.error) {
+                              return const TaskListEmptyWidget();
+                            } else {
+                              final tasksGroupByDate = context
+                                  .read<DoneTaskCubit>()
+                                  .groupTaskByDate(state.tasks);
+                              return TaskListWidget(
+                                tasksGroupByDateList: tasksGroupByDate,
+                                onPaginate: () => context
+                                    .read<DoneTaskCubit>()
+                                    .getMoreTasks(),
+                                onRefresh: () =>
+                                    context.read<DoneTaskCubit>().getTasks(),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const TaskManagementHeaderWidget(),
+                ],
+              ),
+            ),
+          ),
+          floatingActionButton: SizedBox(
+            width: 36,
+            height: 36,
+            child: FloatingActionButton(
+              backgroundColor: Colors.transparent,
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  return Wrap(
+                    children: <Widget>[
+                      ListTile(
+                        leading: const Icon(Icons.music_note),
+                        title: const Text('Music'),
+                        onTap: () => {},
                       ),
-                      BlocBuilder<DoingTaskCubit, TaskManagementState>(
-                        builder: (context, state) {
-                          return TaskListWidget(tasks: state.tasks);
-                        },
+                      ListTile(
+                        leading: const Icon(Icons.videocam),
+                        title: const Text('Video'),
+                        onTap: () => {},
                       ),
-                      BlocBuilder<DoneTaskCubit, TaskManagementState>(
-                        builder: (context, state) {
-                          return TaskListWidget(tasks: state.tasks);
-                        },
-                      ),
+                    ],
+                  );
+                },
+              ),
+              tooltip: 'Increment',
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(128),
+                  gradient: LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.topLeft,
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.tertiary,
                     ],
                   ),
                 ),
-              ],
+                child: const Icon(
+                  Icons.add,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          builder: (BuildContext context) {
-            return Container(
-              child: Wrap(
-                children: <Widget>[
-                  ListTile(
-                    leading: Icon(Icons.music_note),
-                    title: Text('Music'),
-                    onTap: () => {},
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.videocam),
-                    title: Text('Video'),
-                    onTap: () => {},
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(64),
-        ),
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
       ),
     );
   }

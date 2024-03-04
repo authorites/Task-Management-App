@@ -1,24 +1,23 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:task_manage_management/core/error/exceptions.dart';
-import 'package:task_manage_management/core/network/network_info.dart';
+import 'package:task_manage_management/core/network/network_http.dart';
 import 'package:task_manage_management/features/task_management/domain/entities/task.dart';
-import 'package:task_manage_management/injector_container.dart';
 
 class TaskManagementRemoteDataSource {
-  TaskManagementRemoteDataSource(this.client);
-  final http.Client client;
+  TaskManagementRemoteDataSource(this.http);
+  final NetworkHttp http;
 
-  Future<(List<Task>, int)> getTasks(TaskStatus status, int pageSize) async {
-    http.Response response;
+  Future<List<Task>> getTasks(
+    TaskStatus status,
+    int pageSize,
+    int pageNumber,
+  ) async {
+    NetworkResponse response;
     try {
-      if (!await getIt<NetworkInfo>().isConnected) throw NoInternetException();
-      response = await client.get(
-        Uri.parse(
-          'https://todo-list-api-mfchjooefq-as.a.run.app/todo-list?offset=0&limit=$pageSize&sortBy=createdAt&isAsc=true&status=${status.value}',
-        ),
+      response = await http.get(
+        'https://todo-list-api-mfchjooefq-as.a.run.app/todo-list?offset=$pageNumber&limit=$pageSize&sortBy=createdAt&isAsc=true&status=${status.value}',
       );
       if (response.statusCode != 200) throw ServerException();
     } catch (_) {
@@ -29,59 +28,20 @@ class TaskManagementRemoteDataSource {
       final tasksList =
           List<Map<String, dynamic>>.from(tasksJson['tasks'] as List);
       final tasks = tasksList.map(Task.fromJson).toList();
-      // final pageNumber = tasksJson['pageNumber'] as int;
-      final totalPages = tasksJson['totalPages'] as int;
-      return (
-        tasks,
-        totalPages,
-      );
+      return tasks;
     } catch (e) {
       debugPrint(e.toString());
       throw FormatException(e.toString());
     }
   }
 
-  // Future<Task> createTask(Task task) async {
-  //   final response = await client.post(
-  //     Uri.parse('https://jsonplaceholder.typicode.com/todos'),
-  //     headers: <String, String>{
-  //       'Content-Type': 'application/json; charset=UTF-8',
-  //     },
-  //     body: json.encode(task.toJson()),
-  //   );
+  Future<Task> createTask(Task task) async {
+    // TODO(Amnard): Implement createTask
+    throw UnimplementedError();
+  }
 
-  //   if (response.statusCode == 201) {
-  //     final Map<String, dynamic> taskJson = json.decode(response.body);
-  //     return Task.fromJson(taskJson);
-  //   } else {
-  //     throw ServerException();
-  //   }
-  // }
-
-  // Future<Task> updateTask(Task task) async {
-  //   final response = await client.put(
-  //     Uri.parse('https://jsonplaceholder.typicode.com/todos/${task.id}'),
-  //     headers: <String, String>{
-  //       'Content-Type': 'application/json; charset=UTF-8',
-  //     },
-  //     body: json.encode(task.toJson()),
-  //   );
-
-  //   if (response.statusCode == 200) {
-  //     final Map<String, dynamic> taskJson = json.decode(response.body);
-  //     return Task.fromJson(taskJson);
-  //   } else {
-  //     throw ServerException();
-  //   }
-  // }
-
-  // Future<void> deleteTask(String id) async {
-  //   final response = await client.delete(
-  //     Uri.parse('https://jsonplaceholder.typicode.com/todos/$id'),
-  //   );
-
-  //   if (response.statusCode != 200) {
-  //     throw ServerException();
-  //   }
-  // }
+  Future<Task> deleteTask(String id) async {
+    // TODO(Amnard): Implement deleteTask
+    throw UnimplementedError();
+  }
 }
